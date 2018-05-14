@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: trainerjob<%= buildnumber %>
+spec:
+  template:
+    metadata:
+      name: trainerjob
+    spec:
+      containers:
+      - name: trainer
+        image: jakkaj/sampletrainer:latest
+        volumeMounts:
+        - mountPath: "/mnt/azure"
+          name: volume 
+        env:
+        - name: MODELFOLDER
+          value: "/mnt/azure"        
+      restartPolicy: Never
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: azurefile
+  backoffLimit: 1
