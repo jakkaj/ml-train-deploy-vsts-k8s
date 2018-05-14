@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: azurefile
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /data/azurefile/
