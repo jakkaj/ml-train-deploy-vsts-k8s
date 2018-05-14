@@ -37,6 +37,17 @@ The main tenets were:
     - % based splits
     - Other intelligent traffic scrutiny / routing
 
+# Getting Started
+
+Before you start you'll need the following things installed / setup.
+
+- A [Visual Studio Team Services](https://www.visualstudio.com/team-services/) instance. You can set one up as a free trial, or if you have an MSDN subscription you may have some licenses available.
+- A [Kubernetes](https://kubernetes.io/) cluster. We used the [acs-engine yeoman generator](https://github.com/jakkaj/generator-acsengine) to set one up in Azure. 
+    - Make sure you set up Kubernetes v1.9 or better so the automatic sidecar injection works with [Istio](https://istio.io/docs/setup/kubernetes/quick-start.html) (more on that later!)
+- [Docker](https://docs.docker.com/install/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+
+
 ## The Model Training Job
 
 Our statement at the beginning of the project was to set up a machine learning delivery capability via DevOps based practices. 
@@ -49,6 +60,8 @@ The model is a collaborative filtering model to assist with recommendations. It 
 ### Parameters
 The model takes a series of parameters for the source data location as well as the output location. These parameters are passed in to the model by the build as environment variables to the Kubernetes job. The model output location is based on the build number of the VSTS build. The other parameters are generated and passed in as build variables.
 
+### The Model
+
 
 
 ## Scoring build and deployment 
@@ -58,6 +71,13 @@ The model takes a series of parameters for the source data location as well as t
 
 
 #Links
+
+## Microsoft Stuff
 - [Visual Studio Team Services](https://www.visualstudio.com/team-services/)
 - [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/)
 - [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/blobs/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+## Kubernetes Stuff
+- [Kubernetes](https://kubernetes.io/)
+- [Istio](https://istio.io/docs/setup/kubernetes/quick-start.html)
+- [Docker](https://docs.docker.com/install/)
