@@ -1,11 +1,38 @@
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: azurefile
+# spec:
+#   accessModes:
+#     - ReadWriteMany
+#   capacity:
+#     storage: 1Gi
+#   hostPath:
+#     path: /data/azurefile/
+#   storageClassName: standard
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: azurefile
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   capacity:
     storage: 1Gi
   hostPath:
     path: /data/azurefile/
+  storageClassName: standard
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: azurefile
