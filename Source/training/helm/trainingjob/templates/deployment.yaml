@@ -1,13 +1,15 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ template "trainingjob.fullname" . }}
-  labels:
-    app: {{ template "trainingjob.name" . }}
-    chart: {{ template "trainingjob.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    buildNumber: {{ template .Values.buildNumber}}
+  name: trainingjob-{{ .Values.build.number }}
+  version: {{ .Values.build.number}}
+  #name: {{ template "trainingjob.fullname" . }}
+  # labels:
+  #   app: {{ template "trainingjob.name" . }}
+  #   chart: {{ template "trainingjob.chart" . }}
+  #   release: {{ .Release.Name }}
+  #   heritage: {{ .Release.Service }}
+  #   buildNumber: {{ .Values.build.number}}
 spec:
   template:
     metadata:
@@ -15,13 +17,14 @@ spec:
     spec:
       containers:
       - name: trainer
-        image: jakkaj/sampletrainer:{{.Values.buildNumber}}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
-        - mountPath: "{{.Values.modelFolder}}"
+        - mountPath: {{ .Values.outputs.mountpath | quote}}
           name: volume 
         env:
         - name: MODELFOLDER
-          value: "{{.Values.modelFolder}}"        
+          value:  {{ .Values.outputs.modelfolder | quote}}        
       restartPolicy: Never
       volumes:
       - name: volume

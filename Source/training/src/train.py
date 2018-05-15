@@ -2,7 +2,9 @@ import time
 import os
 
 MODELFOLDER = os.environ["MODELFOLDER"]
+print("Taking some time to render a pretend model :)")
 print(MODELFOLDER)
+
 time.sleep(15) 
 
 
