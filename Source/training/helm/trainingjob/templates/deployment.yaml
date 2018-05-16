@@ -31,3 +31,4 @@ spec:
         persistentVolumeClaim:
           claimName: azurefile
   backoffLimit: 1
+  restartPolicy: never
