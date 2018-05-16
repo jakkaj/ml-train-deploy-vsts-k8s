@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: trainer
-        image: jakkaj/sampletrainer:latest
+        image: jakkaj/sampletrainer:dev
         volumeMounts:
         - mountPath: "/mnt/azure"
           name: volume 
