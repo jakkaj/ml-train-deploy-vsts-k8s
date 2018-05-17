@@ -1,0 +1,1 @@
+tar -czvf  samplecompressed/trainingjob.tar.gz trainingjob
