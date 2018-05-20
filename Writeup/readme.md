@@ -151,9 +151,14 @@ The values are passed in to the build using [Variable Groups](https://docs.micro
 
 ### Processing the variables
 
-The end artefact of this first stage of the build is a Helm Chart. This chart contains all the environment variables the app needs to operate. It's all baked in to the chart so it can be re-deployed at a later time, and later on operations can go back and see what parameters were used when the system was deployed.  
+To help parameterise the deployment (with the environment variables) we're using [Helm Charts](https://github.com/kubernetes/helm). Helm Charts provide great flexability at multiple points along the development workflow. The large potion of the configuration can be performed as part of the template by the developer - then checked in to source control. This work is performed in the `templates` director. 
 
-The template Helm Chart (under Source\training\helm\traininjob) looks like this:
+The only section the build needs to worry about is the `values.yaml` file which is passed in to Helm during deployment.  
+
+
+The build will modify this `values.yaml` file and package it with the rest of the chart as a build artifact.  This chart contains all the environment variables the app needs to operate. It's all baked in to the chart artifact so it can be re-deployed at a later time, and later on operations can go back and see what parameters were used when the system was deployed.  
+
+The template Helm Chart (under Source\training\helm\trainingjob) looks like this:
 
 ```yaml
 replicaCount: 1
@@ -175,7 +180,7 @@ We need a way to modify that to add in some build environemnt variables, includi
 
 ### Yaml Writer
 
-To update and existing yaml file or to create a new one from VSTS build arguments you can use the VSTS. Deploy the extension by following the instructions [here](https://github.com/jakkaj/yamlw_vststask). 
+To update and existing yaml file or to create a new one from VSTS build arguments you can use the VSTS. Deploy the extension by following the instructions [here](https://marketplace.visualstudio.com/items?itemName=jakkaj.vsts-yaml-writer). [YamlWriter GitHub Repository](https://github.com/jakkaj/yamlw_vststask).
 
 Add the YamlWriter as a new build task. 
 
@@ -261,7 +266,6 @@ Before we automate the Helm Chart deployment it's a good idea to try it out. Nex
 
 Navgiate to the compelted build in VSTS and download the Helm Chat artifact. Extract zip, and the Helm Chart will be the tar.gz inside. 
 
-To help parameterise the deployment (with the environment variables) we're using [Helm Charts](https://github.com/kubernetes/helm). Helm Charts provide great flexability at multiple points along the development workflow.  
 
 
 
@@ -283,6 +287,8 @@ To help parameterise the deployment (with the environment variables) we're using
 - [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/blobs/)
 - [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction)
 - [Visual Studio Code](https://code.visualstudio.com/)
+- [YamlWriter VSTS Extension](https://marketplace.visualstudio.com/items?itemName=jakkaj.vsts-yaml-writer)
+    - [YamlWriter GitHub Repository](https://github.com/jakkaj/yamlw_vststask)
 ## Kubernetes and Container Stuff
 - [Kubernetes](https://kubernetes.io/)
 - [Istio](https://istio.io/docs/setup/kubernetes/quick-start.html)
