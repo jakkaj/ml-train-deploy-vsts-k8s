@@ -176,13 +176,13 @@ build:
   number: 13
 ```
 
-We need a way to modify that to add in some build environemnt variables, including the values that were passed in to the build via VSTS variables. 
+We need a way to modify that to add in some build environment variables, including the values that were passed in to the build via VSTS variables. 
 
 ### Yaml Writer
 
-To update and existing yaml file or to create a new one from VSTS build arguments you can use the VSTS. Deploy the extension by following the instructions [here](https://marketplace.visualstudio.com/items?itemName=jakkaj.vsts-yaml-writer). [YamlWriter GitHub Repository](https://github.com/jakkaj/yamlw_vststask).
+To update an existing yaml file or to create a new one from VSTS build arguments you can use the VSTS. Deploy the extension by following the instructions [here](https://marketplace.visualstudio.com/items?itemName=jakkaj.vsts-yaml-writer). Also check out the [YamlWriter GitHub Repository](https://github.com/jakkaj/yamlw_vststask).
 
-Add the YamlWriter as a new build task. 
+In your build, add the YamlWriter as a new build task and set the following parameters: 
 
 File: `Source/training/helm/trainingjob/values.yaml`. 
 
@@ -192,7 +192,7 @@ Our Parameters look as following - although yours will differ!
 
 This tool will open `values.yaml` and add/update values according to the parameters passed in. 
 
-The output looks something like this
+When running the build the output will look something like this
 
 ```
 2018-05-18T03:41:45.6562552Z ##[section]Starting: YamlWriter 
@@ -231,10 +231,12 @@ The output looks something like this
 
 ```
 
-This process loaded the `values.yaml` file, modified and saved it back. Then the build process then archites the Helm Chart directory and saves it as a build artefact. 
+This process loaded the `values.yaml` file, modified and saved it back. Then the build process then archives the Helm Chart directory and saves it as a build artefact. 
 
 - Create a Archive task and set Root folder to `Source/training/helm/trainingjob` the archive type to tar and gz and archive output `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`
 - Create a Publish Artifact task to prep the chart for release  (Path to publish: `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`).
+
+The next step is to test the Helm Chart works before setting up the scoring side of the build. 
 
 ## Prep The Cluster
 
@@ -244,13 +246,13 @@ The cluster will need some preparation before the workloads can run - in this ca
 
 In Azure we add the PVC as an Azure File based PVC, which links to [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) over the SMB protocol. This location is accessible outside the cluster and can be used between nodes. 
 
-From the `Source\kube` subfolder run:
+From the `Source\kube` sub-folder run:
 
 ```
 kubectl apply -f pvc_azure.yml
 ```
 
-Or if you're running locally in something like Minikube run the following to set up a local PVC that will stand in for Azure Files during your development. 
+Or if you're running locally in something like Minikube run the following to set up a local PVC that will act as a stand in for Azure Files during your development. 
 
 ```
 kubectl apply -f pvc_minikube.yml
@@ -264,7 +266,7 @@ You can of course use any PVC type you'd like as long as they are accessible acr
 
 Before we automate the Helm Chart deployment it's a good idea to try it out. Next step is to pull the chart and manually deploy it to do the cluster. 
 
-Navgiate to the compelted build in VSTS and download the Helm Chat artifact. Extract zip, and the Helm Chart will be the tar.gz inside. 
+Navigate to the completed build in VSTS and download the Helm Chat artifact. Extract zip, and the Helm Chart will be the tar.gz inside. 
 
 
 

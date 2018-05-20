@@ -25,7 +25,9 @@ spec:
           name: volume 
         env:
         - name: MODELFOLDER
-          value:  {{ .Values.outputs.modelfolder | quote}}        
+          value:  {{ .Values.outputs.modelfolder | quote}}
+        - name: BUILDNUMBER
+          value:  {{ .Values.build.number | quote}}        
       restartPolicy: Never
       volumes:
       - name: volume
