@@ -14,6 +14,8 @@ The main tenets were:
     - Linked back to PR, tasks, comments etc in VSTS
     - Must allow for model provenance
     - Can be kicked of automatically or manually by passing in required parameters
+- The deployment to include the scoring site
+    - Model training code and scoring site deployed as a unit
 
 ### Containers
 - All components of system must operate inside Docker containers
@@ -37,6 +39,60 @@ The main tenets were:
     - Traffic % based splits
     - Other intelligent traffic scrutiny / routing
 
+# The Solution - immutable deployments
+
+Each deployment in the system is immutable. It contains all the important code, configuration and settings. Importantly it contains both the model training code and the scoring code. 
+
+## Model training job
+
+The model training process runs as a Kubernetes job. It takes a range of environment variables pass in via VSTS -> Helm Chart -> Kubernetes environment variable -> container -> Python script. These variables are things like source data location, target data location, access keys etc. 
+
+The model will produce the trained model and other outputs and save them to a shared location based on the values passed in via the environment variables. 
+
+In our system the path was based on the VSTS build number. 
+
+## Scoring site
+
+The other portion of the system is the scoring site which exposes an API endpoint that can be used to pass in data and return a scoring result. 
+
+Again, this site takes environment variables including the shared model output path. 
+
+## Why deploy them like this
+
+There are a range of reasons. When the scoring site is coupled to a model such as this forming a coupled, immutable deployment you get a range of things that would normally be reserved for regular software deployments. 
+
+- Have a number of model/scoring pairs deployed at a time
+- Ability for [blue/green](https://martinfowler.com/bliki/BlueGreenDeployment.html) deployments
+- Traffic splits, A/B testing
+- Roll forward and back deployments
+    - Including re-build and re-deploy after time (years later)
+- CI/CD deployments, including developer test areas and similar concepts
+- Unit and integration testing across the entire deployment
+- Simplified model to scoring api syncronisation (they often have coupled dependencies)
+- Code and model provenance
+    - Model and scoring site are linked to the people, pull requests, stores, tests and tasks that went in to making the deployment
+- Probably other cool stuff :)
+
+### Ability to Cron the build 
+
+*Why not just store all the configs in source control?*
+
+In our system there is a nightly ETL process that exports data from the production system ready for training with the model. 
+
+This systems allows a cron job to be configured to kick off new builds daily. The system can then use release management to migrate traffic to the newly built model once it's passed any testing or other validation work. 
+
+Parameterising via the build and applying those parameters to build artifacts allows for this daily build scenario. 
+
+It also allows for the CI/CD scenario. 
+
+## Synchonisation 
+
+The model could take some time to compute so during deployment there needs to be a synconisation step before the scoring pods come up to allow traffic to be directed to them. 
+
+Synchronisation is achieved by using a Kubernetes [init container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/) which holds off the initilisation process until the model is read for use. More on this below. 
+
+The next section will guide you through how to stand up a similar system. 
+
 # Getting Started
 
 Before you start you'll need the following things installed / setup.
@@ -49,7 +105,6 @@ Before you start you'll need the following things installed / setup.
 - [Visual Studio Code](https://code.visualstudio.com/)
 - Azure stuff: an [Azure Container Registry](https://azure.microsoft.com/en-gb/services/container-registry/), [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/)
 
-
 For new users (and for demos!) a graphical Kubernetes app can be helpful. [Kubernetic](https://kubernetic.com/) is one such app. Of interest is that the app refreshes immediately when the cluster state changes, unlike the web ui which needs to be refreshed manually. 
 
 ## The Model Training Job
@@ -59,14 +114,16 @@ Our statement at the beginning of the project was to set up a machine learning d
 The practical aim of the project is to build *a* model through training and delivering to a scoring system - the model itself is not all that important... i.e. this process could be used with any training system based around any technology (thank you containers!). 
 
 ### Input Data
-The model is a collaborative filtering model to assist with recommendations. It takes data that has been extracted from the production databases. The ETL is orchestrated by [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) and saves data to an [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/blobs/) account in CSV format under a convention based folder structure. This section is out of scope for this document. 
+The model in our scenario was a collaborative filtering model to assist with recommendations. It takes data that has been extracted from the production databases. The ETL is orchestrated by [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) and saves data to an [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/blobs/) account in CSV format under a convention based folder structure. This section is out of scope for this document. 
 
 The input locations are passed in to the containers as environment variables. 
+
+The actual model type is not important - the model in this sample code simply has a delay of 15 seconds before writing out a sample model file. 
 
 ### Parameters
 The model training container takes a series of parameters for the source data location as well as the output location. These parameters are passed in to the model by the build as environment variables to the Kubernetes job. The model output location is based on the build number of the VSTS build. The other parameters are generated and passed in as build variables.
 
-This parameterisation is used heavily in the system. To help make parameterisation simpler we've opted to use [Helm](https://github.com/kubernetes/helm) to make packages which form the system's deployments. The build system prepares the Helm Charts and deploys them to the cluster. 
+This parameterisation is used heavily in the system. To help make parameterisation simpler we've opted to use [Helm Charts](https://github.com/kubernetes/helm) to make packages which form the system's deployments. The build system prepares the Helm Charts and deploys them to the cluster. 
 
 ### Set-up the Environment
 Before the model can be trained the environment needs some set-up. In this system the model is output to an Azure File share - which is stored in blob storage. You'll need to create a PVC (PersistentVolumeClaim) as somewhere to save the model. 
@@ -102,7 +159,7 @@ We'll be doing similar steps, with the addition that we'll be creating and updat
 
 ### Parameteriseing the Deployment 
 
-
+To help parameterise the deployment (with the environment variables) we're using [Helm Charts](https://github.com/kubernetes/helm). Helm Charts provide great flexability at multiple points along the development workflow.  
 
 
 
@@ -129,3 +186,4 @@ We'll be doing similar steps, with the addition that we'll be creating and updat
 - [Istio](https://istio.io/docs/setup/kubernetes/quick-start.html)
 - [Docker](https://docs.docker.com/install/)
 - [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)
+- [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
