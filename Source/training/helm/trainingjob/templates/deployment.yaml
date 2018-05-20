@@ -2,14 +2,15 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: trainingjob-{{ .Values.build.number }}
-  version: {{ .Values.build.number}}
+  version: {{ .Values.build.number | quote}}
   #name: {{ template "trainingjob.fullname" . }}
-  # labels:
-  #   app: {{ template "trainingjob.name" . }}
-  #   chart: {{ template "trainingjob.chart" . }}
-  #   release: {{ .Release.Name }}
-  #   heritage: {{ .Release.Service }}
-  #   buildNumber: {{ .Values.build.number}}
+  labels:
+    app: {{ template "trainingjob.name" . }}
+    chart: {{ template "trainingjob.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    version: {{ .Values.build.number | quote}}
+    buildnumber: {{ .Values.build.number | quote}}
 spec:
   template:
     metadata:
@@ -31,3 +32,4 @@ spec:
         persistentVolumeClaim:
           claimName: azurefile
   backoffLimit: 1
+  restartPolicy: never

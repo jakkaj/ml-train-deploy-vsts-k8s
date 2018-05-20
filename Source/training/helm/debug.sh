@@ -1,0 +1,1 @@
+helm install trainingjob --dry-run --debug

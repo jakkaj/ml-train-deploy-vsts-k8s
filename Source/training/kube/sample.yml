@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: trainerjob
+  name: trainerjob  
 spec:
   template:
     metadata:
@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: trainer
-        image: jakkaj/sampletrainer:latest
+        image: jakkaj/sampletrainer:dev
         volumeMounts:
         - mountPath: "/mnt/azure"
           name: volume 

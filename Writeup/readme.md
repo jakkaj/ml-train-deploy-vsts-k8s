@@ -132,6 +132,109 @@ The output path is taken in as an environment variable MODELFOLDER. This is pass
 
 By having these variables passed in as environment variables as opposed to something like config maps or similar the deployment is immutable, the settings are always locked once deployed. Importantly the deployment can be repeated later with the same settings from the same historical Git tag. 
 
+
+
+### Building the Model Container
+With VSTS it's super easy to build and deploy containers to Kubernetes. [This article](http://jessicadeen.com/tech/microsoft/how-to-deploy-to-kubernetes-using-helm-and-vsts/) by Jessica Deen gives a great overview of the process. We'll not repeat those steps here.
+
+We'll be doing similar steps, with the addition that we'll be creating and updating a Helm package as part of the build that will result in a build artefact. 
+
+### Parameteriseing the Deployment 
+
+The model takes a range of parameters - things like where to source the training data from as well as where to save the output. All these parameters are "baked in" to the output build - keeping in line with the immutable deployment requirement. 
+
+The values are placed in to the Helm Chart's values.yaml file. It is possible to pass in values to Helm Charts during publication using `--set` but that would mean an outside config requirement during publication. 
+
+### Variable Groups
+
+The values are passed in to the build using [Variable Groups](https://docs.microsoft.com/en-us/vsts/build-release/concepts/library/variable-groups?view=vsts). These allow you to create centrally managed variables for builds across your VSTS collection. These variables can be adjusted at build time. This allows users of the system to fire off parameterised builds without having to know "how" to build and deploy an instance of the system to the cluster. 
+
+### Processing the variables
+
+The end artefact of this first stage of the build is a Helm Chart. This chart contains all the environment variables the app needs to operate. It's all baked in to the chart so it can be re-deployed at a later time, and later on operations can go back and see what parameters were used when the system was deployed.  
+
+The template Helm Chart (under Source\training\helm\traininjob) looks like this:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: jakkaj/sampletrainer
+  tag: dev
+  pullPolicy: IfNotPresent
+
+outputs:
+  modelfolder: /mnt/azure/
+  mountpath: /mnt/azure
+
+build:
+  number: 13
+```
+
+We need a way to modify that to add in some build environemnt variables, including the values that were passed in to the build via VSTS variables. 
+
+### Yaml Writer
+
+To update and existing yaml file or to create a new one from VSTS build arguments you can use the VSTS. Deploy the extension by following the instructions [here](https://github.com/jakkaj/yamlw_vststask). 
+
+Add the YamlWriter as a new build task. 
+
+File: `Source/training/helm/trainingjob/values.yaml`. 
+
+Our Parameters look as following - although yours will differ!
+
+```image.repository='janisonhackregistry.azurecr.io/$(Build.Repository.Name)',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)',env.BLOB_STORAGE_ACCOUNT='$(BLOB_STORAGE_ACCOUNT)',env.BLOB_STORAGE_KEY='$(BLOB_STORAGE_KEY)', env.BLOB_STORAGE_CONTAINER='$(BLOB_STORAGE_CONTAINER)',env.BLOB_STORAGE_CSV_FOLDER='$(BLOB_STORAGE_CSV_FOLDER)',env.TENANTID='$(TENANTID)'```
+
+This tool will open `values.yaml` and add/update values according to the parameters passed in. 
+
+The output looks something like this
+
+```
+2018-05-18T03:41:45.6562552Z ##[section]Starting: YamlWriter 
+2018-05-18T03:41:45.6632990Z ==============================================================================
+2018-05-18T03:41:45.6645860Z Task         : Yaml Writer
+2018-05-18T03:41:45.6659314Z Description  : Feed in parameters to write out yaml to new or existing files
+2018-05-18T03:41:45.6674165Z Version      : 0.18.0
+2018-05-18T03:41:45.6688693Z Author       : Jordan Knight
+2018-05-18T03:41:45.6704359Z Help         : Pass through build params and other interesting things by using a comma separated list of name value pairs. Supports deep creation - e.g. something.somethingelse=10,something.somethingelseagain='hi'. New files will be created, and existing files updated. 
+2018-05-18T03:41:45.6721664Z ==============================================================================
+2018-05-18T03:41:46.0603680Z File: /opt/vsts/work/1/s/Source/training/helm/trainingjob/values.yaml (exists: true)
+2018-05-18T03:41:46.0622913Z Settings: image.repository='<youwish>/Documentation',image.tag='115',outputs.modelfolder='/mnt/azure/115',env.BLOB_STORAGE_ACCOUNT='<youwish>',env.BLOB_STORAGE_KEY='<youwish>', env.BLOB_STORAGE_CONTAINER='<youwish>',env.BLOB_STORAGE_CSV_FOLDER='"2018\/05\/08"',env.TENANTID='<youwish>'
+2018-05-18T03:41:46.0640773Z Dry run: false
+2018-05-18T03:41:46.0709407Z Writing file: /opt/vsts/work/1/s/Source/training/helm/trainingjob/values.yaml
+2018-05-18T03:41:46.0726587Z Result:
+2018-05-18T03:41:46.0746248Z  replicaCount: 1
+2018-05-18T03:41:46.0759265Z image:
+2018-05-18T03:41:46.0771294Z   repository: <youwish>/Documentation
+2018-05-18T03:41:46.0785611Z   tag: '115'
+2018-05-18T03:41:46.0801686Z   pullPolicy: IfNotPresent   
+2018-05-18T03:41:46.0829768Z     
+2018-05-18T03:41:46.0877844Z outputs:
+2018-05-18T03:41:46.0889861Z   modelfolder: /mnt/azure/115
+2018-05-18T03:41:46.0902953Z   mountpath: /mnt/azure
+2018-05-18T03:41:46.0915630Z build:
+2018-05-18T03:41:46.0927381Z   number: 13
+2018-05-18T03:41:46.0939422Z env:
+2018-05-18T03:41:46.0950803Z   BLOB_STORAGE_ACCOUNT: <youwish>
+2018-05-18T03:41:46.0965333Z   BLOB_STORAGE_KEY: >-
+2018-05-18T03:41:46.0978866Z     <youwish>
+2018-05-18T03:41:46.0990595Z   BLOB_STORAGE_CONTAINER: <youwish>
+2018-05-18T03:41:46.1004951Z   BLOB_STORAGE_CSV_FOLDER: '"2018/05/08"'
+2018-05-18T03:41:46.1019701Z   TENANTID: <youwish>
+2018-05-18T03:41:46.1028046Z 
+2018-05-18T03:41:46.1054089Z ##[section]Finishing: YamlWriter 
+
+```
+
+This process loaded the `values.yaml` file, modified and saved it back. Then the build process then archites the Helm Chart directory and saves it as a build artefact. 
+
+- Create a Archive task and set Root folder to `Source/training/helm/trainingjob` the archive type to tar and gz and archive output `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`
+- Create a Publish Artifact task to prep the chart for release  (Path to publish: `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`).
+
+## Prep The Cluster
+
+The cluster will need some preparation before the workloads can run - in this case there needs to be a shared location to save the trained models to. 
+
 #### Add the PVC
 
 In Azure we add the PVC as an Azure File based PVC, which links to [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) over the SMB protocol. This location is accessible outside the cluster and can be used between nodes. 
@@ -152,12 +255,11 @@ You can of course use any PVC type you'd like as long as they are accessible acr
 
 **Note:** This step was not performed as part of the build process. You could automate this, but in our case it was just as easy to apply it as it only has to be done once for the cluster (per namespace). 
 
-### Building the Model Container
-With VSTS it's super easy to build and deploy containers to Kubernetes. [This article](http://jessicadeen.com/tech/microsoft/how-to-deploy-to-kubernetes-using-helm-and-vsts/) by Jessica Deen gives a great overview of the process. We'll not repeat those steps here.
+## Test the Helm Chart
 
-We'll be doing similar steps, with the addition that we'll be creating and updating a Helm package as part of the build that will result in a build artefact. 
+Before we automate the Helm Chart deployment it's a good idea to try it out. Next step is to pull the chart and manually deploy it to do the cluster. 
 
-### Parameteriseing the Deployment 
+Navgiate to the compelted build in VSTS and download the Helm Chat artifact. Extract zip, and the Helm Chart will be the tar.gz inside. 
 
 To help parameterise the deployment (with the environment variables) we're using [Helm Charts](https://github.com/kubernetes/helm). Helm Charts provide great flexability at multiple points along the development workflow.  
 
@@ -173,7 +275,7 @@ To help parameterise the deployment (with the environment variables) we're using
 
 
 
-#Links
+# Links
 
 ## Microsoft Stuff
 - [Visual Studio Team Services](https://www.visualstudio.com/team-services/)
