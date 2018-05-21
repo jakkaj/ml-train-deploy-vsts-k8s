@@ -7,6 +7,8 @@ print("Taking some time to render a pretend model :)")
 print("Model Folder: " + MODELFOLDER)
 print ("Build Number: " + BUILDNUMBER)
 
+os.makedirs(MODELFOLDER, exist_ok=True)
+
 time.sleep(15) 
 
 
