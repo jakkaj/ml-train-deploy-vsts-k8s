@@ -111,6 +111,7 @@ Before you start you'll need the following things installed / setup.
 - [Docker](https://docs.docker.com/install/)
 - [Visual Studio Code](https://code.visualstudio.com/)
 - Azure stuff: an [Azure Container Registry](https://azure.microsoft.com/en-gb/services/container-registry/), [Azure Blob Storage](https://azure.microsoft.com/en-gb/services/storage/)
+- [Helm](https://docs.helm.sh/using_helm/)
 
 For new users (and for demos!) a graphical Kubernetes app can be helpful. [Kubernetic](https://kubernetic.com/) is one such app. Of interest is that the app refreshes immediately when the cluster state changes, unlike the web ui which needs to be refreshed manually. 
 
