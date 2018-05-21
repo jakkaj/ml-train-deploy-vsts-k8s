@@ -16,7 +16,7 @@ scoringimage:
 
 
 outputs:
-  modelfolder: /mnt/azure/
+  modelfolder: /mnt/azure/13
   mountpath: /mnt/azure
 
 build:
