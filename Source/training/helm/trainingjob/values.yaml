@@ -7,7 +7,13 @@ replicaCount: 1
 image:
   repository: jakkaj/sampletrainer
   tag: dev
-  pullPolicy: IfNotPresent
+  pullPolicy: IfNotPresent #This allows to pull from local docker cache when using minikube etc. Should probably be 'Always' in prod. 
+
+scoringimage:
+  repository: jakkaj/samplescorer
+  tag: dev
+  pullPolicy: IfNotPresent #This allows to pull from local docker cache when using minikube etc. Should probably be 'Always' in prod. 
+
 
 outputs:
   modelfolder: /mnt/azure/

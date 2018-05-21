@@ -1,5 +1,6 @@
 import time
 import os
+import random
 
 MODELFOLDER = os.environ["MODELFOLDER"]
 BUILDNUMBER = os.environ["BUILDNUMBER"]
@@ -12,11 +13,11 @@ os.makedirs(MODELFOLDER, exist_ok=True)
 time.sleep(15) 
 
 
-import datetime
-today = time.strftime("%Y-%m-%d %H-%M")
+rand = random.random()
 fileoutput = MODELFOLDER + "/complete.txt"
 file = open(fileoutput,"w") 
 print("Wrote: " + fileoutput) 
-file.write("Python writing: " + str(today))
+print ("Random Score: " + str(rand))
+file.write(str(rand))
 file.write("Build Number: " + BUILDNUMBER) 
 file.close

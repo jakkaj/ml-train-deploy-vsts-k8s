@@ -25,6 +25,8 @@ The main tenets were:
     - Promotions between environments achieved by the VSTS release mechanism
     - Enable CI/CD scenarios
     - Automated from end-to-end
+    - Can be run on a cron job daily and remain immutable
+        - Builds/Deployments do not overwrite each other
 
 - Immutable deployments
     - Deployments must be versioned
@@ -39,11 +41,14 @@ The main tenets were:
     - Traffic % based splits
     - Other intelligent traffic scrutiny / routing
 
-# The Solution - immutable deployments
+## The Solution - immutable deployments
 
 Each deployment in the system is immutable. It contains all the important code, configuration and settings. Importantly it contains both the model training code and the scoring code. 
 
-## Model training job
+It's important to note that the type of model we're deploying needs to be updated regularly with the latest data. This deployment system is not for data scientist / engineer inner loop iterative development... e.g. modify code, run, get score, improve code etc. This model is for production operationalisation of a model -> training -> scoring pipeline.
+ This pipeline is not just for CI/CD but also for usage with a cron job - repeating each day as new data is made available from the ETL process. 
+
+### Model training job
 
 The model training process runs as a Kubernetes job. It takes a range of environment variables pass in via VSTS -> Helm Chart -> Kubernetes environment variable -> container -> Python script. These variables are things like source data location, target data location, access keys etc. 
 
@@ -51,13 +56,13 @@ The model will produce the trained model and other outputs and save them to a sh
 
 In our system the path was based on the VSTS build number. 
 
-## Scoring site
+### Scoring site
 
 The other portion of the system is the scoring site which exposes an API endpoint that can be used to pass in data and return a scoring result. 
 
 Again, this site takes environment variables including the shared model output path. 
 
-## Why deploy them like this
+### Why deploy them like this
 
 There are a range of reasons. When the scoring site is coupled to a model such as this forming a coupled, immutable deployment you get a range of things that would normally be reserved for regular software deployments. 
 
@@ -73,7 +78,7 @@ There are a range of reasons. When the scoring site is coupled to a model such a
     - Model and scoring site are linked to the people, pull requests, stores, tests and tasks that went in to making the deployment
 - Probably other cool stuff :)
 
-### Ability to Cron the build 
+## Ability to Cron the build 
 
 *Why not just store all the configs in source control?*
 
@@ -107,6 +112,8 @@ Before you start you'll need the following things installed / setup.
 
 For new users (and for demos!) a graphical Kubernetes app can be helpful. [Kubernetic](https://kubernetic.com/) is one such app. Of interest is that the app refreshes immediately when the cluster state changes, unlike the web ui which needs to be refreshed manually. 
 
+# Training and Deploying Model
+
 ## The Model Training Job
 
 Our statement at the beginning of the project was to set up a machine learning delivery capability via DevOps based practices. 
@@ -134,7 +141,7 @@ By having these variables passed in as environment variables as opposed to somet
 
 
 
-### Building the Model Container
+## Building the Model Container
 With VSTS it's super easy to build and deploy containers to Kubernetes. [This article](http://jessicadeen.com/tech/microsoft/how-to-deploy-to-kubernetes-using-helm-and-vsts/) by Jessica Deen gives a great overview of the process. We'll not repeat those steps here.
 
 We'll be doing similar steps, with the addition that we'll be creating and updating a Helm package as part of the build that will result in a build artefact. 
@@ -188,7 +195,9 @@ File: `Source/training/helm/trainingjob/values.yaml`.
 
 Our Parameters look as following - although yours will differ!
 
-```image.repository='janisonhackregistry.azurecr.io/$(Build.Repository.Name)',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)',env.BLOB_STORAGE_ACCOUNT='$(BLOB_STORAGE_ACCOUNT)',env.BLOB_STORAGE_KEY='$(BLOB_STORAGE_KEY)', env.BLOB_STORAGE_CONTAINER='$(BLOB_STORAGE_CONTAINER)',env.BLOB_STORAGE_CSV_FOLDER='$(BLOB_STORAGE_CSV_FOLDER)',env.TENANTID='$(TENANTID)'```
+```
+build.number='$(Build.BuildNumber)',image.repository='<your acr>/<your image name>',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)',env.BLOB_STORAGE_ACCOUNT='$(BLOB_STORAGE_ACCOUNT)',env.BLOB_STORAGE_KEY='$(BLOB_STORAGE_KEY)', env.BLOB_STORAGE_CONTAINER='$(BLOB_STORAGE_CONTAINER)',env.BLOB_STORAGE_CSV_FOLDER='$(BLOB_STORAGE_CSV_FOLDER)',env.TENANTID='$(TENANTID)'
+```
 
 This tool will open `values.yaml` and add/update values according to the parameters passed in. 
 
@@ -238,11 +247,13 @@ This process loaded the `values.yaml` file, modified and saved it back. Then the
 
 The next step is to test the Helm Chart works before setting up the scoring side of the build. 
 
+# Running the Training Job in Kubernetes
+
 ## Prep The Cluster
 
 The cluster will need some preparation before the workloads can run - in this case there needs to be a shared location to save the trained models to. 
 
-#### Add the PVC
+### Add the Persistent Volume Claim (PVC)
 
 In Azure we add the PVC as an Azure File based PVC, which links to [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) over the SMB protocol. This location is accessible outside the cluster and can be used between nodes. 
 
@@ -268,10 +279,66 @@ Before we automate the Helm Chart deployment it's a good idea to try it out. Nex
 
 Navigate to the completed build in VSTS and download the Helm Chat artifact. Extract zip, and the Helm Chart will be the tar.gz inside. 
 
+### Install Helm 
+
+This article will not full go over Helm, Helm Charts and other set-up requirements. Suffice it to say you need the Helm CLI client installed on your machine and Tiller installed in the cluster. 
+
+Check out the [Helm Installation Instructions](https://docs.helm.sh/using_helm/) to get started. 
+
+### Download the Helm Chart locally
+
+In VSTS, grab the asset .zip file from the latest successful build. Expand it (and expand the internal Helm Chart so you can see it). 
+
+If you open the chart folder, check out `values.yaml` you should see the updated parameters including the correct build number and container names. 
+
+In this case to test you can change the image name to `jakkaj/sampletrainer` and the tag to `dev`.
+
+Switch to the Helm Chart location and run:
+
+```
+helm install . 
+kubectl get jobs
+kubectl describe job <jobname>
+```
+Look for things like:
+
+    Pods Statuses:  0 Running / 1 Succeeded / 0 Failed`
+
+and
+
+    Type    Reason            Age   From            Message
+    ----    ------            ----  ----            -------
+    Normal  SuccessfulCreate  2m    job-controller  Created pod: trainingjob-122-stnmn
+
+That means the job is running!
+
+The next stage is to prepare the scoring side of the site. 
+
+# Building and Deploying the Scoring Site/API
+
+The scoring site and the model are paired from build through to deployment and operation - the model is trained by the job at the same time as the scoring site is deployed. A scoring site always has the same training model underneath. Only when the model is ready (trained, which can take quite some time) will the scoring site pods be initialised and ready to take requests. 
+
+Scoring sites never use any other model, and as such we can use concepts like blue/green deployments, traffic splits and other intelligent routing capabilities in the cluster. We can manage endpoints as if they represent a single model version - meaning we can roll forward and back just by changing the labels that the in cluster routers look for. 
+
+It's all very flexible. 
+
+## Wait for Training to Complete    
+
+As this process is an immutable atomic operation that includes the actual training of the model as well as the scoring site deployment - the scoring site will most likely be deployed long before the trained model is ready. This means we should hold off access to the scoring site until it's to serve with the new model. 
+
+To achieve this we used the Kubernetes [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/) feature. These containers run and the other regular pods will not come up until the init pods successfully exit. If they do not succeed or timeout, the pod may be killed. 
+
+### The "Waiter" Container
+
+Under `Source\scoring\init` there is a bash script and Docker file that will build a container that will "wait" for `$MODELFOLDER/complete.txt` to be written. Model folder is passed in from the cluster via environment variables from the Helm Chart as before. Because the paths are the same from model to scoring side and the data location is shared via a cluster PVC a basic file watcher can do the job here.
+
+Once the file is found, the script exist with code 0. 
+
+**Note:** There is a line in the script that has been commented out for next time - it's a way to log the trained model score to prometheus... that's a story for another day.
 
 
 
-### The Model
+
 
 
 
@@ -297,3 +364,4 @@ Navigate to the completed build in VSTS and download the Helm Chat artifact. Ext
 - [Docker](https://docs.docker.com/install/)
 - [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)
 - [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
+- [Helm Installation Instructions](https://docs.helm.sh/using_helm/)
