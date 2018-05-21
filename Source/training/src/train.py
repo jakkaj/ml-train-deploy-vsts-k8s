@@ -19,5 +19,4 @@ file = open(fileoutput,"w")
 print("Wrote: " + fileoutput) 
 print ("Random Score: " + str(rand))
 file.write(str(rand))
-file.write("Build Number: " + BUILDNUMBER) 
 file.close

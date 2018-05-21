@@ -336,8 +336,18 @@ Once the file is found, the script exist with code 0.
 
 **Note:** There is a line in the script that has been commented out for next time - it's a way to log the trained model score to prometheus... that's a story for another day.
 
+### Making the Scoring Pod Wait
 
+Running the init container is achieved by adding an `initContainers` section to the pod spec for the deployment in the Helm Chart. This can be seen in `Source\helm\modelsystem\templates\scoring_deployment.yaml`
 
+```yaml
+initContainers:
+      - name: waiter-container
+        image: jakkaj/modelwaiter:dev
+        ...
+```
+
+With this in place, the scoring pod will wait until the file (complete.txt) is found in the correct path (as supplied by the `MODELFOLDER` environmnet variable). 
 
 
 
