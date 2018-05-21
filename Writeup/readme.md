@@ -1,7 +1,9 @@
 # Machine Learning Training and Scoring Pipeline
 *A devops based pipeline to train models and orchestrate them for scoring in a Kubernetes cluster*
 
-This article describes how we built a pipeline to train and deliver a machine learning model and deliver it to production for scoring - using standard DevOps practices. 
+This article is produced from work done by Microsoft and [Janison](https://janison.com/) engineers to produce a machine learning model delivery pipeline. 
+
+It describes how we built this pipeline to train a machine learning model and deliver it to production for scoring - using industry standard DevOps practices. 
 
 The project is an automated build and release system based on [Visual Studio Team Services](https://www.visualstudio.com/team-services/). 
 
