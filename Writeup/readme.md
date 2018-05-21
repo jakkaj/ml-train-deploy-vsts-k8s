@@ -146,6 +146,8 @@ With VSTS it's super easy to build and deploy containers to Kubernetes. [This ar
 
 We'll be doing similar steps, with the addition that we'll be creating and updating a Helm package as part of the build that will result in a build artefact. 
 
+**Note** Make sure to set your image name in both the build and push stages to `sampletrainer:$(Build.BuildNumber)`
+
 ### Parameteriseing the Deployment 
 
 The model takes a range of parameters - things like where to source the training data from as well as where to save the output. All these parameters are "baked in" to the output build - keeping in line with the immutable deployment requirement. 
@@ -196,10 +198,12 @@ File: `Source/helm/modelsystem/values.yaml`.
 Our Parameters look as following - although yours will differ!
 
 ```
-build.number='$(Build.BuildNumber)',image.repository='<your acr>/<your image name>',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)',env.BLOB_STORAGE_ACCOUNT='$(BLOB_STORAGE_ACCOUNT)',env.BLOB_STORAGE_KEY='$(BLOB_STORAGE_KEY)', env.BLOB_STORAGE_CONTAINER='$(BLOB_STORAGE_CONTAINER)',env.BLOB_STORAGE_CSV_FOLDER='$(BLOB_STORAGE_CSV_FOLDER)',env.TENANTID='$(TENANTID)'
+build.number='$(Build.BuildNumber)',scoringimage.repository='<your acr>/samplescorer',scoringimage.tag='$(Build.BuildNumber)',image.repository='<your acr>/sampletrainer',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)'
 ```
 
-This tool will open `values.yaml` and add/update values according to the parameters passed in. 
+Make sure you replace `<your acr>` with your real registry names. 
+
+This task will open `values.yaml` and add/update values according to the parameters passed in. 
 
 When running the build the output will look something like this
 
@@ -322,6 +326,12 @@ Scoring sites never use any other model, and as such we can use concepts like bl
 
 It's all very flexible. 
 
+## Build the Scoring Container
+
+Add container build and push steps like before for `Source/scoring/site/Dockerfile`.
+
+For this sample call the container `samplescorer:$(Build.BuildNumber)`.  
+
 ## Wait for Training to Complete    
 
 As this process is an immutable atomic operation that includes the actual training of the model as well as the scoring site deployment - the scoring site will most likely be deployed long before the trained model is ready. This means we should hold off access to the scoring site until it's to serve with the new model. 
@@ -347,9 +357,9 @@ initContainers:
         ...
 ```
 
-With this in place, the scoring pod will wait until the file (complete.txt) is found in the correct path (as supplied by the `MODELFOLDER` environmnet variable). 
+With this in place, the scoring pod will wait until the file (complete.txt) is found in the correct path (as supplied by the `MODELFOLDER` environment variable). 
 
-
+Run the build and download the Helm Chart and test it locally again. Remember to replace the image names with jakkaj/sampletrainer and jakkaj/samplescorer and the tag settings to dev. 
 
 
 ## Scoring build and deployment 
