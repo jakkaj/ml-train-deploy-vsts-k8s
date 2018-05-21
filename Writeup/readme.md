@@ -361,10 +361,7 @@ With this in place, the scoring pod will wait until the file (complete.txt) is f
 
 Run the build and download the Helm Chart and test it locally again. Remember to replace the image names with jakkaj/sampletrainer and jakkaj/samplescorer and the tag settings to dev. 
 
-
-## Scoring build and deployment 
-
-## Intelligent routing
+# Deployment
 
 
 
