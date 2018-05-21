@@ -1,0 +1,5 @@
+apiVersion: v1
+appVersion: "1.0"
+description: Model system deployer
+name: modelsystem
+version: 0.1.0

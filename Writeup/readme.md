@@ -165,7 +165,7 @@ The only section the build needs to worry about is the `values.yaml` file which 
 
 The build will modify this `values.yaml` file and package it with the rest of the chart as a build artifact.  This chart contains all the environment variables the app needs to operate. It's all baked in to the chart artifact so it can be re-deployed at a later time, and later on operations can go back and see what parameters were used when the system was deployed.  
 
-The template Helm Chart (under Source\training\helm\trainingjob) looks like this:
+The template Helm Chart (under Source\helm\modelsystem) looks like this:
 
 ```yaml
 replicaCount: 1
@@ -191,7 +191,7 @@ To update an existing yaml file or to create a new one from VSTS build arguments
 
 In your build, add the YamlWriter as a new build task and set the following parameters: 
 
-File: `Source/training/helm/trainingjob/values.yaml`. 
+File: `Source/helm/modelsystem/values.yaml`. 
 
 Our Parameters look as following - although yours will differ!
 
@@ -212,10 +212,10 @@ When running the build the output will look something like this
 2018-05-18T03:41:45.6688693Z Author       : Jordan Knight
 2018-05-18T03:41:45.6704359Z Help         : Pass through build params and other interesting things by using a comma separated list of name value pairs. Supports deep creation - e.g. something.somethingelse=10,something.somethingelseagain='hi'. New files will be created, and existing files updated. 
 2018-05-18T03:41:45.6721664Z ==============================================================================
-2018-05-18T03:41:46.0603680Z File: /opt/vsts/work/1/s/Source/training/helm/trainingjob/values.yaml (exists: true)
+2018-05-18T03:41:46.0603680Z File: /opt/vsts/work/1/s/Source/helm/modelsystem/values.yaml (exists: true)
 2018-05-18T03:41:46.0622913Z Settings: image.repository='<youwish>/Documentation',image.tag='115',outputs.modelfolder='/mnt/azure/115',env.BLOB_STORAGE_ACCOUNT='<youwish>',env.BLOB_STORAGE_KEY='<youwish>', env.BLOB_STORAGE_CONTAINER='<youwish>',env.BLOB_STORAGE_CSV_FOLDER='"2018\/05\/08"',env.TENANTID='<youwish>'
 2018-05-18T03:41:46.0640773Z Dry run: false
-2018-05-18T03:41:46.0709407Z Writing file: /opt/vsts/work/1/s/Source/training/helm/trainingjob/values.yaml
+2018-05-18T03:41:46.0709407Z Writing file: /opt/vsts/work/1/s/Source/helm/modelsystem/values.yaml
 2018-05-18T03:41:46.0726587Z Result:
 2018-05-18T03:41:46.0746248Z  replicaCount: 1
 2018-05-18T03:41:46.0759265Z image:
@@ -242,7 +242,7 @@ When running the build the output will look something like this
 
 This process loaded the `values.yaml` file, modified and saved it back. Then the build process then archives the Helm Chart directory and saves it as a build artefact. 
 
-- Create a Archive task and set Root folder to `Source/training/helm/trainingjob` the archive type to tar and gz and archive output `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`
+- Create a Archive task and set Root folder to `Source/helm/modelsystem` the archive type to tar and gz and archive output `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`
 - Create a Publish Artifact task to prep the chart for release  (Path to publish: `$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tar.gz`).
 
 The next step is to test the Helm Chart works before setting up the scoring side of the build. 
@@ -308,7 +308,7 @@ and
 
     Type    Reason            Age   From            Message
     ----    ------            ----  ----            -------
-    Normal  SuccessfulCreate  2m    job-controller  Created pod: trainingjob-122-stnmn
+    Normal  SuccessfulCreate  2m    job-controller  Created pod: modelsystem-122-stnmn
 
 That means the job is running!
 
