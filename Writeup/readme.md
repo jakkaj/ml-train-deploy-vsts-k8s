@@ -364,9 +364,65 @@ With this in place, the scoring pod will wait until the file (complete.txt) is f
 
 Run the build and download the Helm Chart and test it locally again. Remember to replace the image names with jakkaj/sampletrainer and jakkaj/samplescorer and the tag settings to dev. 
 
+### Logs for the Wait
+
+When testing your Helm Chart, you'll need to see if the waiter is working, and ensure that the scoring pod eventually comes up. 
+
+Get all pods with this command. The `-a` switch ensures to get pods that are stopped as the training job may have ended and existed.
+```
+kubectl get pods -a
+NAME                                                              READY     STATUS      RESTARTS   AGE
+frontend-service-5787b48745-lzw6p                                 1/1       Running     0          1d
+frontend-service-5787b48745-tfms4                                 1/1       Running     0          1d
+scoring-deployment-152-65fc95dc48-l4wld                           1/1       Running     0          5m
+scoring-deployment-20180523.5-1e8b7415-7c2e-e411-80bb-0015qj9ps   1/1       Running     0          1d
+scoring-deployment-20180523.5-1e8b7415-7c2e-e411-80bb-0015rqdht   1/1       Running     0          1d
+scoring-deployment-20180523.7-1e8b7415-7c2e-e411-80bb-0015g2kd8   1/1       Running     0          1d
+scoring-deployment-20180523.7-1e8b7415-7c2e-e411-80bb-0015t8w7c   1/1       Running     0          1d
+trainerjob-20180511.1-th628                                       0/1       Completed   0          13d
+trainerjob-20180514.1-jgg8s                                       0/1       Completed   0          10
+trainingjob-152-mh7kk                                             0/1       Completed   0          5m
+```
+
+Now log out the training job:
+
+```
+kubectl logs trainingjob-152-mh7kk
+Taking some time to render a pretend model :)
+Model Folder: /mnt/azure/152
+Build Number: 152
+Wrote: /mnt/azure/152/complete.txt
+Random Score: 0.6716458949225429
+```
+
+Now log the scoring side. First show the logs for the init container with the `-c` switch. 
+
+```
+kubectl logs scoring-deployment-152-65fc95dc48-l4wld -c waiter-container
+File not found! /mnt/azure/152
+File not found! /mnt/azure/152
+File not found! /mnt/azure/152
+File not found! /mnt/azure/152
+File not found! /mnt/azure/152
+File found
+```
+
+You can see the container is waiting for the file to be written. It then finds it and exits.
+
+Now log the actual scoring site:
+
+```
+kubectl logs scoring-deployment-152-65fc95dc48-l4wld
+Example app listening on port 3000!
+```
+
+That's it, the system waited, and now it's hosting!
+
 # Deployment
 
+With manual testing of the build completed, it's time to release it via proper means. 
 
+Next -> [Setting up the release](release.md);
 
 # Links
 
