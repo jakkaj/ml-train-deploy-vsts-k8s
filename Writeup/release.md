@@ -68,6 +68,20 @@ Only thing left is to run the release on the cluster!
 
 Keep in mind that if you re-run a release from VSTS it will fail becasue the Helm Chart release was already deployed. To clean up run `helm delete <release> --purge`.
 
+### Wait for the Job to Complete
 
+Remember, the job will take a little while to complete and that the service endpoint will not come up until the job has completed. 
+
+Check the job progress by monitoring the job pods have exited by using `kubectl get pods`. 
+
+### Navigate to the Service
+
+The Helm Chart deploys the service endpoint as well as a Kubernetes Service. Type `kubectl get svc` to find the service endpoint.
+
+Find the public IP and navigate to that endpoint!
+
+If you're in Minikube, type `minikube service <servicename>` to navigate to the service. 
+
+Hopefully you see your running service end point!
 
 
