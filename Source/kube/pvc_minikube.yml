@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: azurefile
+  name: azurefilecustom
 spec:
   accessModes:
     - ReadWriteOnce
@@ -17,11 +17,11 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: azurefile
+  name: azurefilecustom
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  volumeName: azurefile
+  volumeName: azurefilecustom

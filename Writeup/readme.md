@@ -204,7 +204,7 @@ Our Parameters look as following - although yours will differ!
 build.number='$(Build.BuildNumber)',scoringimage.repository='<your acr>/samplescorer',scoringimage.tag='$(Build.BuildNumber)',image.repository='<your acr>/sampletrainer',image.tag='$(Build.BuildNumber)',outputs.modelfolder='/mnt/azure/$(Build.BuildNumber)'
 ```
 
-Make sure you replace `<your acr>` with your real registry names. 
+**Note:** Make sure you replace `<your acr>` with your real registry names including the full path. e.g. someregistry.azurecr.io. 
 
 This task will open `values.yaml` and add/update values according to the parameters passed in. 
 
@@ -264,6 +264,8 @@ The cluster will need some preparation before the workloads can run - in this ca
 
 In Azure we add the PVC as an Azure File based PVC, which links to [Azure Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) over the SMB protocol. This location is accessible outside the cluster and can be used between nodes. 
 
+Create an new Storage Account **in the same resource group** as the AKS / acs-engine cluster. By default for this example it's named `samplestorage` - you can change this in pvc_azure.yml.  
+
 From the `Source\kube` sub-folder run:
 
 ```
@@ -280,6 +282,8 @@ You can of course use any PVC type you'd like as long as they are accessible acr
 
 **Note:** This step was not performed as part of the build process. You could automate this, but in our case it was just as easy to apply it as it only has to be done once for the cluster (per namespace). 
 
+
+
 ## Test the Helm Chart
 
 Before we automate the Helm Chart deployment it's a good idea to try it out. Next step is to pull the chart and manually deploy it to do the cluster. 
@@ -291,6 +295,8 @@ Navigate to the completed build in VSTS and download the Helm Chat artifact. Ext
 This article will not full go over Helm, Helm Charts and other set-up requirements. Suffice it to say you need the Helm CLI client installed on your machine and Tiller installed in the cluster. 
 
 Check out the [Helm Installation Instructions](https://docs.helm.sh/using_helm/) to get started. 
+
+**Note:** Remember to run `helm init` on your cluster to set up the required resources. 
 
 ### Download the Helm Chart locally
 
@@ -363,6 +369,18 @@ initContainers:
 With this in place, the scoring pod will wait until the file (complete.txt) is found in the correct path (as supplied by the `MODELFOLDER` environment variable). 
 
 Run the build and download the Helm Chart and test it locally again. Remember to replace the image names with jakkaj/sampletrainer and jakkaj/samplescorer and the tag settings to dev. 
+
+### Push the Wait Container to your Registry
+
+It's a good idea to push the waiter container to your own registry. You can either build the container from the Dockerfile, or you can:
+
+```
+pull jakkaj/modelwaiter:dev
+tag jakkaj/modelwaiter:dev <youracr>.azurecr.io/modelwaiter:dev
+push <youracr>.azurecr.io/modelwaiter:dev
+```
+
+That will re-tag the image with the naming convention to upload to your own container registry. Remember to update the source in the `initContainers` to this new image location. 
 
 ### Logs for the Wait
 
