@@ -1,0 +1,16 @@
+replicaCount: 1
+image:
+  repository: jakkaj/sampletrainer
+  tag: dev
+  pullPolicy: IfNotPresent
+scoringimage:
+  repository: jakkaj/samplescorer
+  tag: dev
+  pullPolicy: IfNotPresent
+outputs:
+  modelfolder: /mnt/azure/154
+  mountpath: /mnt/azure
+build:
+  number: '154'
+env:
+  TENANTID: 1e8b7415-7c2e-e411-80bb-00155d5369ef

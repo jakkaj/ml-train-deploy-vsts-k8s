@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: scoring-{{ .Values.build.number }}
+spec:
+  ports:
+  - port: 80 
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: scoring-app-{{ .Values.build.number }}
+  type: LoadBalancer
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: scoring-deployment-{{ .Values.build.number }}
+spec:
+  selector:
+    matchLabels:
+      app: scoring-app-{{ .Values.build.number }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: scoring-app-{{ .Values.build.number }}
+    spec:
+      containers:
+      - name: readercontainer
+        image: {{ .Values.scoringimage.repository }}:{{ .Values.scoringimage.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - mountPath: {{ .Values.outputs.mountpath | quote}}
+          name: volume 
+        env:
+        - name: MODELFOLDER
+          value:  {{ .Values.outputs.modelfolder | quote}}
+        - name: BUILDNUMBER
+          value:  {{ .Values.build.number | quote}} 
+        ports:
+        - containerPort: 3000        
+      initContainers:
+      - name: waiter-container
+        image: jakkaj/modelwaiter:dev
+        volumeMounts:
+        - mountPath: {{ .Values.outputs.mountpath | quote}}
+          name: volume 
+        env:
+        - name: MODELFOLDER
+          value:  {{ .Values.outputs.modelfolder | quote}}
+        - name: BUILDNUMBER
+          value:  {{ .Values.build.number | quote}}
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: azurefilecustom

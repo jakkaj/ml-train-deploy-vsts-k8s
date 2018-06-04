@@ -4,8 +4,8 @@ metadata:
   name: azurefilecustom
 provisioner: kubernetes.io/azure-file
 parameters:
-  storageAccount: samplestorage
-...
+  storageAccount: jordosamplestorage
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
