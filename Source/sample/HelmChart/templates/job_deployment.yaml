@@ -15,6 +15,7 @@ spec:
   template:
     metadata:
       name: trainerjob
+      version: v{{ .Values.build.number }}
     spec:
       containers:
       - name: trainer

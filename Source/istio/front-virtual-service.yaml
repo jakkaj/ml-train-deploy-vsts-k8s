@@ -1,0 +1,30 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: scoring-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - scoring-test-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    route:
+    - destination:
+        host: frontend-service                 
+        port:
+          number: 80
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: score-156
+# spec:
+#   hosts:
+#   - scoring-app-156
+#   http:
+#   - route:
+#     - destination:
+#         host: scoring-app-156
+#         subset: "156"

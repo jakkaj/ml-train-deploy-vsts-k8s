@@ -1,15 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: scoring-{{ .Values.build.number }}
+  name: scoring
+  labels:
+    app: scoring
 spec:
   ports:
   - port: 80 
     targetPort: 3000
     protocol: TCP
   selector:
-    app: scoring-app-{{ .Values.build.number }}
-  type: LoadBalancer
+    app: scoring-app
+  #type: LoadBalancer
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -18,12 +20,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: scoring-app-{{ .Values.build.number }}
+      app: scoring-app
   replicas: 1
   template:
     metadata:
       labels:
-        app: scoring-app-{{ .Values.build.number }}
+        app: scoring-app
+        version: v{{ .Values.build.number }}
     spec:
       containers:
       - name: readercontainer

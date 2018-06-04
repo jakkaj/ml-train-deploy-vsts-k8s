@@ -1,0 +1,24 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: scoring
+spec:
+  host: scoring
+  subsets:
+  - name: v4
+    labels:
+      version: v4  
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: scoring
+spec:
+  hosts:
+  - scoring
+  http:
+  - route:
+    - destination:
+        host: scoring
+        subset: v4
+  
