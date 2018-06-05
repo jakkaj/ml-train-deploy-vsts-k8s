@@ -31,9 +31,10 @@ kubectl get namespace -L istio-injection
 
 - kubectl apply -f svc.yaml
 - istioctl create -f gateway.yaml
+- kubectl apply -f nginx/frontend.yaml
 - istioctl create -f front-virtual-service.yaml
 - istioctl create -f back-virtual-service.yaml
-- kubectl apply -f nginx/frontend.yaml
+- 
 
 kubectl get svc istio-ingressgateway -n istio-system
 
