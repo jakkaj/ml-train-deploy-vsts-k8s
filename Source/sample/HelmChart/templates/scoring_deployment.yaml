@@ -1,17 +1,17 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: scoring
-  labels:
-    app: scoring
-spec:
-  ports:
-  - port: 80 
-    targetPort: 3000
-    protocol: TCP
-  selector:
-    app: scoring-app
-  #type: LoadBalancer
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: scoring
+#   labels:
+#     app: scoring
+# spec:
+#   ports:
+#   - port: 3000 
+#     #targetPort: 3000
+#     #protocol: TCP
+#   selector:
+#     app: scoring
+#   #type: LoadBalancer
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -20,12 +20,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: scoring-app
+      app: scoring
   replicas: 1
   template:
     metadata:
       labels:
-        app: scoring-app
+        app: scoring
         version: v{{ .Values.build.number }}
     spec:
       containers:

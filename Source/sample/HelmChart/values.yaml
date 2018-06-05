@@ -8,9 +8,9 @@ scoringimage:
   tag: dev
   pullPolicy: IfNotPresent
 outputs:
-  modelfolder: /mnt/azure/4
+  modelfolder: /mnt/azure/2
   mountpath: /mnt/azure
 build:
-  number: '4'
+  number: '2'
 env:
   TENANTID: 1e8b7415-7c2e-e411-80bb-00155d5369ef

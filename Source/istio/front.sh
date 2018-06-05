@@ -1,0 +1,1 @@
+istioctl replace -f front-virtual-service.yaml

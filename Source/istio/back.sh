@@ -1,0 +1,1 @@
+istioctl replace -f back-virtual-service.yaml

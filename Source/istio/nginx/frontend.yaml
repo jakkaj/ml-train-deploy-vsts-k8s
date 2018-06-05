@@ -9,9 +9,9 @@ data:
     server {
         listen 80;
         location / {
-            set $backend scoring.default.svc.cluster.local;
+            set $backend scoring.default.svc.cluster.local:3000;
             proxy_http_version 1.1;
-            proxy_pass http://$backend;
+            proxy_pass http://$backend/;
         }
     }
 ---

@@ -6,8 +6,7 @@ metadata:
     app: scoring
 spec:
   ports:
-  - port: 80 
-    targetPort: 3000
-    protocol: TCP
+  - port: 3000    
+    name: http
   selector:
-    app: scoring-app
+    app: scoring
