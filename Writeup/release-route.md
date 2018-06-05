@@ -9,7 +9,7 @@ install
 curl -L https://git.io/getLatestIstio | sh -
 cd istio-0.8.0
 export PATH=$PWD/bin:$PATH
-kubectl apply -f install/kubernetes/istio-demo.yaml
+helm install install/kubernetes/helm/istio --name istio --namespace istio-system
 ```
 Verify 
 ```
