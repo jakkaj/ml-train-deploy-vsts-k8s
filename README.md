@@ -459,3 +459,6 @@ Next -> [Setting up the release](release.md);
 - [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/)
 - [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
 - [Helm Installation Instructions](https://docs.helm.sh/using_helm/)
+
+# Next
+[Release](release.md)
