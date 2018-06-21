@@ -1,3 +1,13 @@
+** This section is a WIP **
+
+Apologies, this is a work in progress. But, we've made a quick video to get you started!
+
+# Video
+
+[Istio Routing to Enable ML DevOps Workflows](https://youtu.be/ZcdEdAi-tSw)
+
+# Steps
+
 in istio
 
 

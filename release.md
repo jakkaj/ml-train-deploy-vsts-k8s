@@ -85,3 +85,5 @@ If you're in Minikube, type `minikube service <servicename>` to navigate to the 
 Hopefully you see your running service end point!
 
 
+# Next
+[Releasing Routes](release-route.md)
