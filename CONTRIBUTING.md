@@ -11,7 +11,7 @@ Make your change. Add tests for your change. Make the tests pass
 
 Push to your fork and [submit a pull request][pr].
 
-[pr]: https://github.com/xyz
+[pr]: https://github.com/ml-train-deploy-vsts-k8s
 
 At this point you're waiting on us. We like to at least comment on pull requests
 within three business days (and, typically, one business day). We may suggest
@@ -20,8 +20,8 @@ some changes or improvements or alternatives.
 Some things that will increase the chance that your pull request is accepted:
 
 * Write tests.
-* Follow our [style guide][style].
+* Follow our [playbook][playbook].
 * Write a [good commit message][commit].
 
-[style]: https://github.com/xyz
+[playbook]: https://github.com/Microsoft/code-with-engineering-playbook
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
